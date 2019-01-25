@@ -1,0 +1,21 @@
+.aui-list .book-avatar {
+    width:3.8rem;
+}
+.book-avatar .aui-row-padded {
+    background-color: #dddee0;
+    padding: 0.1rem;
+    border-radius: 0.2rem;
+    margin-left: -0.05rem;
+    margin-right: -0.05rem;
+}
+.book-avatar .aui-row-padded [class*=aui-col-xs-] {
+    padding: 0.05rem;
+}
+.book-avatar,
+.book-avatar > img {
+    border-radius:0.2rem;
+}
+.short_intro {
+    padding: 0.3rem 0;
+}
+button, .aui-btn{height: 1rem;line-height: 1rem;padding: 0 0.2rem; margin: 0 0.2rem;border-radius:0.4rem;border-color: #ed424b;color: #ed424b}

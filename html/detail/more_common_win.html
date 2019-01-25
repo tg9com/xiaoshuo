@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <style>
+        .aui-bar-nav {
+            background-color: #ed424b;
+        }
+
+        .aui-bar-tab .aui-active {
+            color: #ed424b
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header">
+        <a class="aui-pull-left aui-btn" id="my-icon" tapmode onclick="api.closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title" id="title">
+
+        </div>
+    </header>
+
+
+
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript">
+
+    apiready = function() {
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var headerPos = $api.offset(header);
+        api.parseTapmode();
+        $api.html($api.byId('title'),api.pageParam.title);
+        api.openFrame({
+            name: 'more_common_frm',
+            url: './more_common_frm.html',
+            pageParam: api.pageParam,
+            reload:true,
+            rect: {
+                x: 0,
+                y: headerPos.h,
+                w: 'auto',
+                h: api.winHeight - headerPos.h
+            }
+        });
+    }
+</script>
+</body>
+</html>

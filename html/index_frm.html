@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/common.css" />
+    <style>
+        .aui-list-item-text {
+            padding: 0.1rem 0
+        }
+
+        .delte_button {
+            min-width: 2rem;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-media-list" id="bookshelflist">
+        </ul>
+    </div>
+
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+
+
+    function bookshelfhtml() {
+        var bookshelf = $api.getStorage('bookshelf');
+        bookshelf = bookshelf || [];
+        var html = '';
+        for (v in bookshelf) {
+            var updateTime = new Date(bookshelf[v]['updated']);
+            updateTime = updateTime.getTime() / 1000;
+            updateTime = $api.friendly_time(updateTime);
+            html += '<li class="aui-list-item aui-list-item-middle"><div class="aui-media-list-item-inner"><div class="aui-list-item-media book-avatar"><img tapmode onclick="$api.openReadWin(' + "'" + bookshelf[v]['_id'] + "','"+bookshelf[v]['title']+"'"+')" src="http://statics.zhuishushenqi.com' + bookshelf[v]['cover'] + '" /></div><div class="aui-list-item-inner"><div tapmode  onclick="$api.openReadWin(' + "'" + bookshelf[v]['_id'] + "','"+bookshelf[v]['title']+"'"+')" class="aui-list-item-text"><div class="aui-list-item-title"><h3 class="aui-pull-left" style="font-weight:bold">' + bookshelf[v]['title'] +'</h3><div class="aui-btn aui-btn-outlined aui-pull-left aui-font-size-12" id="updateTime_'+bookshelf[v]['_id']+'">' + updateTime + '</div></div></div><div class="aui-list-item-text" tapmode onclick="$api.openReadWin(' + "'" + bookshelf[v]['_id'] + "','"+bookshelf[v]['title']+"'"+')"><p class="aui-font-size-12 aui-ellipsis-1">' + bookshelf[v]['author'] +' 著</p></div><div class="aui-list-item-text"><p tapmode onclick="$api.openReadWin(' + "'" + bookshelf[v]['_id'] + "','"+bookshelf[v]['title']+"'"+ ')" class=" aui-font-size-12 aui-ellipsis" id="lastChapter_'+bookshelf[v]['_id']+'">' + bookshelf[v]['lastChapter'] +
+                '</p> <i tapmode onclick="delteBook(' + "'" + bookshelf[v]['_id'] + "'" + ')" class="delte_button aui-iconfont aui-icon-trash"></i></div></div></div></li>';
+        }
+        $api.html($api.byId('bookshelflist'), html);
+        // console.log(html);
+        api.parseTapmode();
+    }
+    //$api.openReadWin(book['_id'],book['title']);
+    apiready = function() {
+        bookshelfhtml();
+
+        $api.refreshHeader(function() { //下拉刷新
+
+          var bookshelf = $api.getStorage('bookshelf');
+          bookshelf = bookshelf || [];
+          var ids = '';
+          for(v in bookshelf){
+            ids = ids + bookshelf[v]['_id'] + ',';
+          }
+          // console.log(ids);
+          if(ids){
+            ids = ids.substr(0,ids.length-1);
+            $api.get('http://api.zhuishushenqi.com/book?view=updated&id='+ids,function(ret){
+              if(ret){
+                for(v in ret){
+                  $api.html($api.byId('lastChapter_'+ret[v]['_id']),ret[v]['lastChapter']);
+                  var updateTime = new Date(ret[v]['updated']);
+                  updateTime = updateTime.getTime() / 1000;
+                  updateTime =  $api.friendly_time(updateTime);
+                  $api.html($api.byId('updateTime_'+ret[v]['_id']),updateTime);
+                  for(b in bookshelf){
+                    if(bookshelf[b]['_id'] == ret[v]['_id']){
+                      bookshelf[b]['updated'] = ret[v]['updated'];
+                      bookshelf[b]['lastChapter'] = ret[v]['lastChapter'];
+                    }
+                  }
+                }
+                $api.setStorage('bookshelf', bookshelf);
+              }
+              api.refreshHeaderLoadDone();
+            },'json');
+          }else{
+            api.refreshHeaderLoadDone();
+          }
+          setTimeout(function(){
+            api.refreshHeaderLoadDone();
+          },10000);
+        });
+
+        setTimeout(function(){
+          api.refreshHeaderLoading();
+        },500)
+
+        api.addEventListener({
+            name: 'bookshelfupdate'
+        }, function(ret, err){
+          bookshelfhtml();
+        });
+
+    }
+    function refres(){
+      api.refreshHeaderLoading();
+    }
+    function delteBook(id) {
+        var bookshelf = $api.getStorage('bookshelf');
+        bookshelf = bookshelf || [];
+        var temp = [];
+        for (v in bookshelf) {
+            if (id != bookshelf[v]['_id']) {
+                temp.push(bookshelf[v]);
+            }
+        }
+        $api.setStorage('bookshelf', temp);
+        bookshelfhtml();
+
+    }
+</script>
+</body>
+</html>

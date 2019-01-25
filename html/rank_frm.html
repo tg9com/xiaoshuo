@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>Hello APP</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/common.css" />
+    <style>
+        .aui-list .book-avatar {
+            width: 3rem;
+        }
+        .aui-list .aui-list-item {
+            padding-left: 0.2rem;
+        }
+        .aui-list .aui-list-item-media {
+            padding-right: 0.2rem;
+        }
+        .img_box {
+            width: 100%;
+            background: url('../image/loading_more.gif') 50% no-repeat;
+            background-size:1rem 1rem;
+            overflow: hidden;
+        }
+
+        .aui-list .aui-list-item-text{padding: 0.1rem 0;}
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-media-list" id="rank_list">
+
+        </ul>
+    </div>
+
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/echo.min.js"></script>
+<script type="text/javascript">
+var UILoading = '';
+var loadingId = -1;
+    apiready = function() {
+        api.parseTapmode();
+        UILoading = api.require('UILoading');
+        api.execScript({
+            frameName: 'rank_win',
+            script: 'rankInfo();'
+        });
+
+
+
+    };
+    function rank_books(id) {
+      UILoading.flower({
+          center: {
+              x: (api.winWidth - api.frameWidth) + api.frameWidth/2,
+              y: api.winHeight/2
+          },
+          size: 30,
+          fixed: true
+      }, function(ret) {
+        loadingId = ret.id
+      });
+
+      $api.html($api.byId('rank_list'),'');
+      $api.get('http://api.zhuishushenqi.com/ranking/'+id,function(ret){
+        if(ret && ret.ok && ret.ranking.books){
+          var data = ret.ranking.books;
+          var html = '';
+          $api.append($api.byId('rank_list'),'');
+          for(v in data){
+            var latelyFollower = data[v]['latelyFollower'];
+            if(latelyFollower>10000){
+              latelyFollower = latelyFollower/10000;
+              latelyFollower = Math.floor(latelyFollower * 100) / 100;
+              latelyFollower = latelyFollower+'万人气';
+            }else{
+              latelyFollower = latelyFollower + '人气';
+            }
+            var shortIntro=data[v]['shortIntro'].replace(/<\/?.+?>/g,"");
+            var shortIntro=shortIntro.replace(/ /g,"");
+            if(v<=6){
+              var imgHtml = '<img src=';
+            }else{
+              var imgHtml = '<img  data-echo=';
+            }
+            html ='<li tapmode onclick="$api.openBookDetail('+"'"+data[v]['_id']+"'"+')"  class="aui-list-item aui-list-item-middle"><div class="aui-media-list-item-inner"><div class="aui-list-item-media book-avatar img_box">'+imgHtml+'"http://statics.zhuishushenqi.com'+data[v]['cover']+'" /></div><div class="aui-list-item-inner"><div class="aui-list-item-text"><div class="aui-list-item-title"><h3 class="aui-pull-left aui-ellipsis" style="font-weight:bold">'+data[v]['title']+'</h3></div></div><div class="aui-list-item-text"><p class="aui-font-size-12 aui-ellipsis">'+data[v]['author']+' 著</p></div><div class="aui-list-item-text"><p class=" aui-font-size-12 aui-ellipsis">'+shortIntro+'</p></div><div class="aui-list-item-text"><p class="aui-font-size-12 "><font class="aui-text-danger">'+data[v]['retentionRatio']+'%留存</font> | <font class="aui-text-purple">'+latelyFollower+'</font></p> </div></div></div></li>';
+            $api.append($api.byId('rank_list'),html);
+          }
+          setTimeout(function(){
+            api.parseTapmode();
+            echo.init({
+                offset: 0,
+                throttle: 250, //设置图片延迟加载的时间
+                unload:true
+            });
+
+          },500);
+        }
+        setTimeout(function(){
+          UILoading.closeFlower ({
+              id: loadingId
+          });
+        },300);
+
+      },'json');
+    }
+</script>
+</body>
+</html>

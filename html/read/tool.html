@@ -1,0 +1,361 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+        .aui-bar-nav {
+            background-color: #000;
+        }
+
+        .icon {
+            width: 1.2em;
+            height: 1.2em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        body {
+            background-color: rgba(0, 0, 0, 0);
+            height: 100%;
+        }
+
+        #center_click {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 99;
+        }
+
+        .read-opt {
+            -webkit-transform: translate(0);
+            -moz-transform: translate(0);
+            -ms-transform: translate(0);
+            -o-transform: translate(0);
+            transform: translate(0);
+            opacity: 1;
+            display: block;
+        }
+
+        .read-join-shelf {
+            font-size: 0.6rem;
+            position: fixed;
+            top: 4rem;
+            right: 4rem;
+            height: 1.6rem;
+            width: 4rem;
+            line-height: 1.6rem;
+            text-align: center;
+            border-radius: 15px 0 0 15px;
+            overflow: hidden;
+            color: #fff;
+            background-color: rgba(0, 0, 0, .9);
+            -webkit-transform: translateX(100%);
+            -moz-transform: translateX(100%);
+            -ms-transform: translateX(100%);
+            -o-transform: translateX(100%);
+            transform: translateX(100%);
+            -webkit-transition: -webkit-transform .15s;
+            transition: -webkit-transform .15s;
+            -o-transition: -o-transform .15s;
+            -moz-transition: transform .15s, -moz-transform .15s;
+            transition: transform .15s;
+            transition: transform .15s, -webkit-transform .15s, -moz-transform .15s, -o-transform .15s;
+            z-index: 99;
+        }
+
+        .read-select-source-block {
+            position: fixed;
+            top: 4rem;
+            left: 0;
+            width: 6rem;
+            text-align: right;
+            color: #000;
+            z-index: 100;
+        }
+
+        .read-select-source {
+            font-size: 0.6rem;
+            line-height: 1.6rem;
+            text-align: center;
+            border-radius: 0 15px 15px 0;
+            overflow: hidden;
+            color: #fff;
+            background-color: rgba(0, 0, 0, .9);
+            z-index: 99;
+            margin: 2px 0;
+        }
+
+        .aui-bar-tab-item {
+            color: #fff;
+        }
+
+        .read-set-switch {
+            padding: 10px 0;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            height: 3rem;
+            position: fixed;
+            bottom: 2.5rem;
+            background: #000;
+            width: 100%;
+            border-bottom: 1px solid hsla(0, 0%, 100%, .1);
+        }
+
+        .read-set-switch .read-set-switch-item {
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            -moz-box-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+        }
+
+        .read-set-switch .read-set-switch-item span {
+            display: inline-block;
+            width: 80%;
+            margin: 0 10%;
+            border: 1px solid #fff;
+            border-radius: 100px;
+            line-height: 36px;
+            text-align: center;
+            font-size: 20px;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body style="">
+    <header class="aui-bar aui-bar-nav" id="aui-header">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeReadDetail();">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <a class="aui-btn aui-pull-right" tapmode onclick="bookDetail()">
+            <svg class="icon" aria-hidden="true">
+              <use xlink:href="#icon-xiangqing"></use>
+            </svg>
+        </a>
+        <a class="aui-btn aui-pull-right" tapmode onclick="share()">
+            <span class="aui-iconfont aui-icon-share"></span>
+        </a>
+    </header>
+    <div class="" style="position: relative;">
+        <div class="read-join-shelf read-opt"><span id="bookShelfStatus" tapmode onclick="addBook();">加入书架</span></div>
+        <div class="read-select-source-block read-opt" id="source_list">
+        </div>
+        <div id="center_click"></div>
+      </div>
+        <div class="read-set-switch aui-hide" id="fontSizeBox" style="">
+            <div class="read-set-switch-item" tapmode onclick="fontSize(1);"><span><svg aria-hidden="true" class="icon"><use xlink:href="#icon-a1"></use></svg></span></div>
+            <div class="read-set-switch-item" tapmode onclick="fontSize(2);"><span><svg aria-hidden="true" class="icon"><use xlink:href="#icon-a"></use></svg></span></div>
+        </div>
+    <footer class="aui-bar aui-bar-tab" id="footer" style="background:#000">
+        <div class="aui-bar-tab-item" tapmode onclick="open_chapters_list();">
+            <svg class="icon" aria-hidden="true">
+              <use xlink:href="#icon-mulu"></use>
+            </svg>
+            <div class="aui-bar-tab-label">目录</div>
+        </div>
+        <div class="aui-bar-tab-item" id="night_time" tapmode onclick="day_or_night(1);">
+            <svg class="icon" aria-hidden="true">
+            <use xlink:href="#icon-yejian"></use>
+          </svg>
+            <div class="aui-bar-tab-label">夜间模式</div>
+        </div>
+
+        <div class="aui-bar-tab-item aui-hide" id="day_time" tapmode onclick="day_or_night(2);">
+            <svg class="icon" aria-hidden="true">
+            <use xlink:href="#icon-baitian"></use>
+          </svg>
+            <div class="aui-bar-tab-label">日间模式</div>
+        </div>
+
+        <div class="aui-bar-tab-item" tapmode onclick="showSet();">
+            <svg class="icon" aria-hidden="true">
+            <use xlink:href="#icon-Group"></use>
+          </svg>
+            <div class="aui-bar-tab-label">设置</div>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript" src="../../script/iconfont.js"></script>
+    <script type="text/javascript">
+        //发起分享
+        function share() {
+            var sharedModule = api.require('shareAction');
+
+            sharedModule.share({
+                text: '分享小说【' + api.pageParam.bookName + '】' + "\n",
+                thumbnail: '',
+                path: 'http://xiaoshuo.4ms.cc/#/book/index.html#/book/' + api.pageParam.bookId,
+                type: 'url'
+            });
+        }
+
+        function bookDetail() {
+            $api.openBookDetail(api.pageParam.bookId);
+            setTimeout(function() {
+                api.closeWin({
+                    'name': 'read_win',
+                    'animation': {
+                        'type': 'none'
+                    }
+                });
+            }, 1000);
+
+        }
+
+        function showSet() {
+            var obj = $api.byId('fontSizeBox');
+            if ($api.hasCls(obj, 'aui-hide')) {
+                $api.removeCls(obj, 'aui-hide');
+            } else {
+                $api.addCls(obj, 'aui-hide');
+            }
+
+        }
+
+        function open_chapters_list() {
+            api.openDrawerPane({
+                type: 'left'
+            });
+        }
+
+        function fontSize(type) {
+            var size = $api.getStorage('read_font_size');
+            if (!size) {
+                size = 18;
+            }
+            if (type == 1) {
+                size--;
+            } else {
+                size++;
+            }
+            $api.setStorage('read_font_size', size);
+            console.log(size);
+            api.sendEvent({
+                name: 'read_font_size'
+            });
+
+        }
+
+        function addBook() {
+            var flag = $api.addBook();
+            if (flag) {
+                $api.html($api.byId('bookShelfStatus'), '已在书架');
+            }
+        }
+        //白天黑夜
+        function day_or_night(type) {
+            $api.setStorage('day_or_night', type);
+            if (type == 1) { //日间
+                $api.removeCls($api.byId('day_time'), 'aui-hide');
+                $api.addCls($api.byId('night_time'), 'aui-hide');
+            } else {
+                $api.removeCls($api.byId('night_time'), 'aui-hide');
+                $api.addCls($api.byId('day_time'), 'aui-hide');
+            }
+            api.sendEvent({
+                name: 'day_or_night'
+            });
+        }
+
+        function closeReadDetail() {
+            var html = $api.html($api.byId('bookShelfStatus'));
+            if (html != '已在书架') {
+                api.confirm({
+                    title: '加入书架',
+                    msg: '喜欢本书就加入书架吧',
+                    buttons: ['不用了', '加入书架']
+                }, function(ret, err) {
+                    var index = ret.buttonIndex;
+                    if (index == 2) {
+                        addBook();
+                    }
+                    api.closeWin();
+                });
+            } else {
+                api.closeWin();
+            }
+
+        }
+        apiready = function() {
+                api.parseTapmode();
+                var header = $api.byId('aui-header');
+                $api.fixStatusBar(header);
+                var footer = $api.byId('footer');
+                var footSet = $api.offset(footer);
+                api.setFullScreen({
+                    fullScreen: false
+                });
+                source_list();
+                center_click(footSet);
+                var dayOrNight = $api.getStorage('day_or_night');
+                day_or_night(dayOrNight);
+
+
+                var bookshelf = $api.getStorage('bookshelf');
+                bookshelf = bookshelf || [];
+                for (v in bookshelf) {
+                    if (api.pageParam.bookId == bookshelf[v]['_id']) {
+                        $api.html($api.byId('bookShelfStatus'), '已在书架');
+                        break;
+                    }
+                }
+
+            }
+            // 把书源列出来
+        function source_list() {
+            var list = $api.getStorage('cur_book_atoc');
+            var html = '<div class="read-select-source read-opt" style="background-color: rgba(30, 30, 30, .8);"><span style="font-size:0.8rem;margin">转码书源</span></div>';
+            for (v in list) {
+                if (v > 10) {
+                    continue;
+                }
+                html += '<div tapmode onclick="selectSource(' + "'" + list[v]['_id'] + "'" + ')" class="read-select-source read-opt"><span>' + list[v]['name'] + '</span></div>';
+            }
+            $api.html($api.byId('source_list'), html);
+            api.parseTapmode();
+
+        }
+
+        //切换书源
+        function selectSource(sourceId) {
+            api.sendEvent({
+                name: 'selectSource',
+                extra: {
+                    sourceId: sourceId
+                }
+            });
+        }
+
+        function center_click(footSet) {
+            var h = api.winHeight / 2;
+            var w = api.winWidth / 2;
+            var hh = h - footSet.h * 2;
+            var ww = w;
+            $api.css($api.byId('center_click'), 'top:' + ((api.winHeight - hh) / 2) + "px;left:" + ((api.winWidth - ww) / 2) + "px;width:" + ww + "px;height:" + hh + "px");
+            $api.byId('center_click').addEventListener("touchstart", function() {
+                api.setFullScreen({
+                    fullScreen: true
+                });
+                api.execScript({
+                    name: 'read_win',
+                    frameName: 'read_frm',
+                    script: 'sliderUnlock();'
+                });
+
+                api.closeFrame();
+            });
+        }
+    </script>
+</body>
+
+</html>

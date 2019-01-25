@@ -1,0 +1,360 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style type="text/css">
+        .aui-bar-nav {
+            background-color: #ed424b;
+        }
+
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+        }
+
+        .aui-bar-tab .aui-active {
+            color: #ed424b
+        }
+
+        .aui-bar-tab {
+            color: inherit
+        }
+    </style>
+</head>
+
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header">
+        <div class="aui-pull-left" id="frm_title">
+            我的书架
+        </div>
+        <div class="aui-title aui-hide" id="nav_sex">
+            <div class="aui-bar aui-bar-btn aui-bar-btn-round">
+                <div class="aui-bar-btn-item " tapmode data-item-sex="1">男生</div>
+                <div class="aui-bar-btn-item" tapmode data-item-sex="2">女生</div>
+            </div>
+        </div>
+        <a class="aui-btn aui-pull-right" tapmode onclick="$api.openSearch()">
+            <span class="aui-iconfont aui-icon-search"></span>
+        </a>
+    </header>
+    <footer class="aui-bar aui-bar-tab" id="footer">
+        <div data-id="0" class="aui-bar-tab-item foot_nav aui-active" tapmode>
+            <svg class="icon" aria-hidden="true">
+            <use xlink:href="#icon-shujia"></use>
+          </svg>
+            <div class="aui-bar-tab-label">书架</div>
+        </div>
+        <div data-id="1" class="aui-bar-tab-item foot_nav" tapmode>
+            <svg class="icon" aria-hidden="true">
+              <use xlink:href="#icon-jingxuan"></use>
+            </svg>
+            <div class="aui-bar-tab-label">精选</div>
+        </div>
+        <div data-id="2" class="aui-bar-tab-item foot_nav" tapmode>
+            <svg class="icon" aria-hidden="true">
+              <use xlink:href="#icon-leimupinleifenleileibie--"></use>
+            </svg>
+            <div class="aui-bar-tab-label">分类</div>
+        </div>
+        <div data-id="3" class="aui-bar-tab-item foot_nav" tapmode>
+            <svg class="icon" aria-hidden="true">
+              <use xlink:href="#icon-paixing"></use>
+            </svg>
+            <div class="aui-bar-tab-label">排行</div>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="../script/api.js"></script>
+    <script type="text/javascript" src="../script/aui-tab.js"></script>
+    <script type="text/javascript" src="../script/zepto.js"></script>
+    <script trpe="text/javascript" src="../script/iconfont.js"></script>
+    <script type="text/javascript">
+        function showSplash() {
+            if(api.systemType=='ios'){
+              return false;
+            }
+            var adShowTime = $api.getStorage('adShowTime');
+            if(adShowTime){
+              var d = new Date();
+              if((d.getTime()-adShowTime)<(60*30*1000)){
+                return false;
+              }
+            }
+
+            var startTime = $api.getStorage('appStartTime');
+            startTime = startTime || 0;
+            startTime++;
+            $api.setStorage('appStartTime', startTime);
+            if (startTime <= 3) {
+                return false;
+            }
+            if (api.debug) {
+                return true;
+            }
+            var tencentAds = api.require('tencentAds');
+            tencentAds.showSplash({
+                splashlogo: '',
+                splashholderimg: ''
+            }, function(ret, err) {
+                console.log($api.jsonToStr(ret));
+                if (ret.status == 'true') {
+                    api.setFullScreen({
+                        fullScreen: true
+                    });
+                    api.removeLaunchView({
+                        animation: {
+                            type: 'fade',
+                            duration: 500
+                        }
+                    });
+                }
+                if (ret) {
+                    // adClick = true;
+                    var d=new Date();
+                    $api.setStorage('adShowTime', d.getTime());
+
+                }
+                if (ret.status == 'close' || ret.status == 'onclick') {
+                    api.setFullScreen({
+                        fullScreen: false
+                    });
+                }
+            });
+        }
+
+
+
+
+        apiready = function() {
+            api.parseTapmode();
+            var header = $api.byId('aui-header');
+            $api.fixStatusBar(header);
+            var headerPos = $api.offset(header);
+            var body_h = $api.offset($api.dom('body')).h;
+            var footSize = $api.offset($api.byId('footer'));
+            $api.setStorage('footSize', footSize);
+            $api.setStorage('headerPos', headerPos);
+            var frm_title = ['我的书架', '在线小说', '分类', '排行榜'];
+
+            function footNavIndex(index) {
+                var title = frm_title[index];
+                $api.html($api.byId('frm_title'), title);
+                if (index == 0 || index == 2) { //隐藏选择性别
+                    $api.addCls($api.byId('nav_sex'), 'aui-hide');
+                } else {
+                    $api.removeCls($api.byId('nav_sex'), 'aui-hide');
+                }
+            }
+
+            var bookshelf = $api.getStorage('bookshelf');
+            bookshelf = bookshelf || [];
+            var book = window.localStorage.getItem('RM_SHEFLBOOK');
+            // console.log(book);
+            if (book) {
+                book = eval('(' + book + ')');
+                if (book && book.length > 0) {
+                    for (v in book) {
+                        var cover = book[v]['cover'];
+                        if (cover) {
+                            cover = cover.substr(32);
+                        }
+                        book[v]['cover'] = cover;
+                        if (bookshelf.length > 0) {
+                            for (bs in bookshelf) {
+                                if (bookshelf[bs]['_id'] != book[v]['id']) {
+                                    bookshelf.push({
+                                        "_id": book[v]['id'],
+                                        "longIntro": '',
+                                        "title": book[v]['title'],
+                                        "author": book[v]['author'],
+                                        "cover": book[v]['cover'],
+                                        "lastChapter": book[v]['lastChapter'],
+                                        "updated": book[v]['updated'],
+                                    });
+                                }
+                            }
+                        } else {
+                            bookshelf.push({
+                                "_id": book[v]['id'],
+                                "longIntro": '',
+                                "title": book[v]['title'],
+                                "author": book[v]['author'],
+                                "cover": book[v]['cover'],
+                                "lastChapter": book[v]['lastChapter'],
+                                "updated": book[v]['updated'],
+                            });
+                        }
+                    }
+                }
+                $api.setStorage('bookshelf', bookshelf);
+                window.localStorage.setItem('RM_SHEFLBOOK', '');
+            }
+
+
+            if (!bookshelf || bookshelf.length <= 0) {
+                var frameGroupIndex = 1;
+            } else {
+                var frameGroupIndex = 0;
+            }
+            footNavIndex(frameGroupIndex);
+            api.openFrameGroup({
+                name: 'index_group',
+                scrollEnabled: false,
+                preload: 0,
+                index: frameGroupIndex,
+                rect: {
+                    x: 0,
+                    y: headerPos.h,
+                    w: 'auto',
+                    h: api.winHeight - headerPos.h - footSize.h
+                },
+                frames: [{
+                    name: 'index_frm',
+                    url: 'index_frm.html'
+                }, {
+                    name: 'jingxuan_frm',
+                    url: 'jingxuan_frm.html'
+                }, {
+                    name: 'category_frm',
+                    url: 'category_frm.html'
+                }, {
+                    name: 'rank_win',
+                    url: 'rank_win.html',
+                    bounces: true,
+                    vScrollBarEnabled: false
+                }]
+            }, function(ret, err) {
+
+            });
+
+            $('.foot_nav').forEach(function(item) {
+                $api.addEvt(item, 'click', function(e) {
+                    var index = $api.attr(this, 'data-id');
+                    if (index) {
+                        api.setFrameGroupIndex({
+                            name: 'index_group',
+                            scroll: false,
+                            index: index
+                        });
+                    }
+                    if (index != 3) {
+                        api.setFrameAttr({
+                            name: 'rank_frm',
+                            hidden: true
+                        });
+                    } else {
+                        api.setFrameAttr({
+                            name: 'rank_frm',
+                            hidden: false
+                        });
+                    }
+                    $('.foot_nav').forEach(function(item) {
+                        $api.removeCls(item, 'aui-active');
+                        var this_index = $api.attr(item, 'data-id');
+                        if (index == this_index) {
+                            $api.addCls(item, 'aui-active');
+                        }
+                    });
+
+                    footNavIndex(index);
+                });
+            });
+
+            var res = showSplash();
+            if (res === false) {
+                api.removeLaunchView({
+                    animation: {
+                        type: 'fade',
+                        duration: 500
+                    }
+                });
+            }
+
+            // api.openWin({
+            //     name: 'user_book_list_win',
+            //     url: './detail/user_book_list_win.html',
+            //     pageParam: {"bookId":"5b1e3d6af6149741037e6a63","title":"民国谍影"}
+            // });
+            var bar = document.querySelectorAll(".aui-bar-btn");
+            if (bar) {
+                for (var i = 0; i < bar.length; i++) {
+                    var d = bar[i];
+                    var tab = new auiTab({
+                        element: bar[i],
+                        repeatClick: true
+                    }, function(ret) {
+                        if (ret.index) {
+                            $api.setStorage('user_sex', ret.index);
+                            api.sendEvent({
+                                name: 'user_sex_change',
+                            });
+                        }
+                    });
+                }
+            }
+            //男生女生
+            var user_sex = $api.getStorage('user_sex');
+            if (!user_sex) {
+                user_sex = 1;
+                $api.setStorage('user_sex', user_sex);
+
+            }
+            $('[data-item-sex]').removeClass('aui-active');
+            $('[data-item-sex="' + user_sex + '"]').addClass('aui-active');
+
+
+            var keyBack = 0;
+            api.addEventListener({
+                name: 'keyback'
+            }, function(ret, err) {
+                if (keyBack < 1) {
+                    keyBack++;
+                    api.toast({
+                        msg: '再按一次返回键退出',
+                        duration: 2000,
+                        location: 'bottom'
+                    });
+                } else {
+                    api.closeWidget({
+                        silent: true
+                    });
+                }
+                setTimeout(function() {
+                    keyBack = 0;
+                }, 3000);
+            });
+
+            // api.addEventListener({
+            //     name: 'resume'
+            // }, function(ret, err) {
+            //     showSplash();
+            // });
+
+
+
+            api.addEventListener({
+                name: 'smartupdatefinish'
+            }, function(ret, err) {
+                api.rebootApp();
+            });
+
+
+            $api.get('http://jm.994s.cn/book/bottom.js',function(ret){
+              if(ret){
+                console.log($api.jsonToStr(ret));
+                $api.setStorage('bottom_ret', ret.code);
+
+              }
+            },'json');
+        };
+    </script>
+</body>
+
+</html>

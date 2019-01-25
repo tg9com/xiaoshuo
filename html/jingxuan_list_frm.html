@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/common.css" />
+    <style>
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-media-list" id="con_box">
+
+        </ul>
+    </div>
+
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    var page = 1;
+    var catId = '';
+    var loadingId = -1;
+    var UILoading = '';
+    function bookList() {
+        UILoading.flower({
+            center: {
+                x: api.winWidth/2,
+                y: api.winHeight/2
+            },
+            size: 30,
+            fixed: true
+        }, function(ret) {
+          loadingId = ret.id
+        });
+
+        $api.get('http://api.zhuishushenqi.com/recommendPage/node/books/all/' + catId + '?st='+page, function(ret) {
+            if (ret.ok && ret.data) {
+                var html = '';
+                var data = ret.data;
+                for (v in data) {
+                    var book = data[v]['book'];
+                    var serial = book['isSerial'] ? '连载中' : '完结';
+                    var shortIntro = book['shortIntro'].replace(/<\/?.+?>/g, "");
+                    var shortIntro = shortIntro.replace(/ /g, "");
+                    html += '<li tapmode onclick="$api.openBookDetail('+"'"+book['_id']+"'"+')"  class="aui-list-item aui-list-item-middle"><div class="aui-media-list-item-inner"><div class="aui-list-item-media book-avatar"><img src="' + book['cover'] +
+                        '" /></div><div class="aui-list-item-inner"><div class="aui-list-item-text"><div class="aui-list-item-title"><h3 class="aui-pull-left" style="font-weight:bold">' + book['title'] +
+                        '</h3></div></div><div class="aui-list-item-text short_intro"><p class="aui-font-size-12 aui-ellipsis-2">' + shortIntro +
+                        '</p></div><div class="aui-list-item-text"><p class="aui-font-size-12 aui-ellipsis-1">' + book['author'] +
+                        ' 著</p><div class=""><div class="aui-label aui-label aui-label-outlined">' + book['majorCate'] + '</div><div class="aui-label aui-label-danger aui-label-outlined">' + serial +
+                        '</div><div class="aui-label aui-label-info aui-label-outlined">' + book['latelyFollower'] + '人气</div></div></div></div></div></li>';
+                }
+                $api.append($api.byId('con_box'), html);
+                api.parseTapmode();
+
+            }
+            UILoading.closeFlower ({
+                id: loadingId
+            });
+            loadingId = -1;
+        }, 'json');
+    }
+    apiready = function() {
+        UILoading = api.require('UILoading');
+        catId = api.pageParam.catId;
+
+        bookList();
+        api.addEventListener({
+            name:'scrolltobottom',
+            extra:{
+                threshold:100            //设置距离底部多少距离时触发，默认值为0，数字类型
+            }
+        }, function(ret, err){
+          console.log(loadingId);
+          if(loadingId==-1){
+            loadingId = 0;
+            page++;
+            bookList();
+          }
+        });
+
+    }
+</script>
+</body>
+</html>

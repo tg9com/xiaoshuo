@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style type="text/css">
+        #classify-list {
+            width: 5rem;
+            height: 100%;
+            background-color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        #classify-list .aui-list {
+            overflow-y: scroll;
+        }
+
+        .aui-list .aui-list-item-title {
+            font-size: 0.7rem;
+        }
+
+        .aui-list-item.active {
+            background-color: #fff;
+            border-left: 2px solid #ed424b;
+        }
+        #rank_type_box{background: #f6f7f9;}
+        body{-webkit-overflow-scrolling:touch}
+    </style>
+</head>
+
+<body>
+    <section class="aui-content" id="classify-list">
+        <ul class="aui-list aui-list-noborder" id="rank_type_box">
+
+        </ul>
+    </section>
+
+    <script type="text/javascript" src="../script/api.js"></script>
+    <script type="text/javascript">
+        function rankInfo() {
+            $api.get('http://api.zhuishushenqi.com/ranking/gender', function(ret) {
+                var sex = $api.getStorage('user_sex');
+                var sexArr = {
+                    1: 'male',
+                    2: 'female'
+                };
+                var sex = sexArr[sex];
+                var firstSortId = '';
+                if (ret && ret[sex]) {
+                    var data = ret[sex];
+                    // console.log($api.jsonToStr(data));
+                    var html = '';
+                    for (v in data) {
+                        var cssName = '';
+                        if (v === "0") {
+                            firstSortId = data[v]['_id'];
+
+                            cssName = 'active';
+                        }
+                        html += '<li tapmode onclick="rank_list(' + "'" + data[v]["_id"] + "',this" + ');" class="aui-list-item '+cssName+'"><div class="aui-list-item-inner"><div class="aui-list-item-title">' + data[v]['shortTitle'] + '</div></div></li>'
+                    }
+                    $api.html($api.byId('rank_type_box'), html);
+                    rank_list(firstSortId);
+                }
+
+            }, 'json');
+        }
+
+        function rank_list(id,obj) {
+            if(obj){
+              [].forEach.call($api.domAll('.aui-list-item'), function(item){
+                　$api.removeCls(item, 'active');
+              });
+              $api.addCls(obj, 'active');
+            }
+            api.execScript({
+                frameName: 'rank_frm',
+                script: 'rank_books("' + id + '");'
+            });
+
+        }
+        var classifyListH = footSize = headerPos = '';
+        apiready = function() {
+            api.parseTapmode();
+            classifyListH = $api.offset($api.byId('classify-list')).w;
+            footSize = $api.getStorage('footSize');
+            headerPos = $api.getStorage('headerPos');
+            document.getElementById("classify-list").style.height = api.winHeight - headerPos.h + "px";
+
+            api.openFrame({
+                name: 'rank_frm',
+                url: './rank_frm.html',
+                bounces: false,
+                rect: {
+                    x: classifyListH + 5,
+                    y: headerPos.h,
+                    w: api.winWidth - classifyListH - 5,
+                    h: api.winHeight - headerPos.h - footSize.h
+                },
+                hScrollBarEnabled: true
+            });
+            // api.sendFrameToBack({
+            //     'from': 'rank_frm'
+            // });
+
+            api.addEventListener({
+                name: 'user_sex_change'
+            }, function(ret, err) {
+                rankInfo();
+            });
+        };
+    </script>
+</body>
+
+</html>

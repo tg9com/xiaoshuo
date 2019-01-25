@@ -1,0 +1,65 @@
+ <widget id="A6093848376215"  version="0.0.1">
+    <name>在线小说</name>
+    <description>在线小说</description>
+    <author email="" href=""></author>
+    <!-- <content src="index.html" /> -->
+    <content src="html/index_win.html" />
+    <access origin="*" />
+    <preference name="userAgent" value="vue_apicloud"/>
+    <preference name="pageBounce" value="false"/>
+    <preference name="appBackground" value="rgb(255, 255, 255)"/>
+    <preference name="windowBackground" value="rgb(255, 255, 255)"/>
+    <preference name="frameBackgroundColor" value="rgb(255, 255, 255)"/>
+    <preference name="hScrollBarEnabled" value="false"/>
+    <preference name="vScrollBarEnabled" value="false"/>
+    <preference name="autoLaunch" value="true"/>
+    <preference name="fullScreen" value="false"/>
+    <preference name="autoUpdate" value="true" />
+    <preference name="smartUpdate" value="true" />
+    <preference name="debug" value="true"/>
+    <preference name="statusBarAppearance" value="true"/>
+    <permission name="readPhoneState" />
+    <permission name="camera" />
+    <permission name="record" />
+    <permission name="location" />
+    <permission name="fileSystem" />
+    <permission name="internet" />
+    <permission name="bootCompleted" />
+    <permission name="hardware" />
+    <feature name="TalkingData">
+        <param name="logEnable" value="false" />
+        <param name="exceptionReportEnabled" value="true" />
+        <param name="channel" value="ZeTao" />
+    </feature>
+    <!--<feature name="tencentAds">
+      <param name="APPID" value="1108112752"/>
+      <param name="BannerPosID" value="9050358148688753"/>
+      <param name="InterteristalPosID" value="2040055108085721"/>
+      <param name="SplashPosID" value="9070850168787675"/>
+    </feature>-->
+    <feature name="rongCloud2">
+        <param name="appKey" value="pkfcgjstp25e8" />
+    </feature>
+
+
+    <intent-filter>
+        <action name="android.intent.action.VIEW"/>
+        <category name="android.intent.category.DEFAULT"/>
+        <data scheme="rong" host="io.rong.fast" pathPrefix="/conversation/"/>
+    </intent-filter>
+
+    <intent-filter>
+       <action name="android.intent.action.VIEW" />
+       <category name="android.intent.category.DEFAULT" />
+       <data host="com.kuaizhuishu.hanyuan" path="/conversationlist" scheme="rong" />
+    </intent-filter>
+
+
+    <intent-filter>
+        <action name="android.intent.action.VIEW" />
+        <category name="android.intent.category.DEFAULT" />
+        <data host="com.kuaizhuishu.hanyuan" pathPrefix="/push_message" scheme="rong" />
+    </intent-filter>
+
+    <preference name="customRefreshHeader" value="UIPullRefreshFlash"/>
+</widget>

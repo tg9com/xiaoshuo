@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <style>
+        .aui-bar-nav {
+            background-color: #ed424b;
+        }
+
+        .aui-bar-tab .aui-active {
+            color: #ed424b
+        }
+
+        .aui-bar-tab {
+            color: inherit
+        }
+
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+        }
+
+        .aui-bar-tab .aui-bar-tab-item {
+            height: 2.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header">
+        <a class="aui-pull-left aui-btn" id="my-icon" tapmode onclick="api.closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">
+            在线小说
+        </div>
+
+        <a class="aui-btn aui-pull-right" tapmode onclick="share()">
+            <span class="aui-iconfont aui-icon-share"></span>
+        </a>
+
+    </header>
+
+    <footer class="aui-bar aui-bar-tab" id="footer">
+        <div data-id="0" class="aui-bar-tab-item foot_nav aui-active" tapmode onclick="addBook();">
+            <svg class="icon" aria-hidden="true" style="color:#999">
+            <use xlink:href="#icon-jiarushujia-h"></use>
+          </svg>
+            <div class="aui-bar-tab-label" style="font-size:0.6rem;color:#999" id="bookShelfStatus">加入书架</div>
+        </div>
+        <div data-id="1" class="aui-bar-tab-item foot_nav" tapmode style="background:#ed424b" onclick="readBook();">
+            <div class="aui-bar-tab-label" style="color:#fff;font-size:1.2rem">立即阅读</div>
+        </div>
+    </footer>
+
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript" src="../../script/iconfont.js"></script>
+    <script type="text/javascript">
+        function addBookSuccess() {
+            $api.html($api.byId('bookShelfStatus'), '已加入书架');
+        }
+
+        function readBook() {
+            var book = $api.getStorage('read_book_info');
+            $api.openReadWin(book['_id'], book['title']);
+        }
+
+        function addBook() {
+            api.execScript({
+                name: 'book_detail_win',
+                frameName: 'book_detail_frm',
+                script: 'addBook();'
+            });
+        }
+        var sharedModule = '';
+        //发起分享
+        function share() {
+            if(!sharedModule){
+              sharedModule = api.require('shareAction');
+            }
+            var book = $api.getStorage('read_book_info');
+            var longIntro = book['longIntro'].replace(/<\/?.+?>/g, "");
+            longIntro = longIntro.replace(/ /g, "");
+
+            sharedModule.share({
+                text: '分享小说【' + book['title'] + '】' + "\n" + longIntro+"\n" ,
+                thumbnail: '',
+                path: 'http://xiaoshuo.4ms.cc/#/book/index.html#/book/' + book['_id'],
+                type: 'url'
+            });
+        }
+        apiready = function() {
+            var header = $api.byId('aui-header');
+            $api.fixStatusBar(header);
+            var headerPos = $api.offset(header);
+            var footSize = $api.offset($api.byId('footer'));
+            api.parseTapmode();
+            var bookshelf = $api.getStorage('bookshelf');
+            bookshelf = bookshelf || [];
+            for (v in bookshelf) {
+                if (api.pageParam.bookId == bookshelf[v]['_id']) {
+                    $api.html($api.byId('bookShelfStatus'), '已加入书架');
+                    break;
+                }
+            }
+            api.openFrame({
+                name: 'book_detail_frm',
+                url: './book_detail_frm.html',
+                pageParam: api.pageParam,
+                reload: true,
+                rect: {
+                    x: 0,
+                    y: headerPos.h,
+                    w: 'auto',
+                    h: api.winHeight - headerPos.h - footSize.h
+                }
+            });
+
+            api.addEventListener({
+                name: 'bookshelfupdate'
+            }, function(ret, err) {
+                if (ret) {
+                    var book = $api.getStorage('read_book_info');
+                    if (book && ret.value) {
+                        var val = ret.value;
+                        if (val.bookId == book['_id']) {
+                          addBookSuccess();
+                        }
+                    }
+                }
+            });
+
+
+        }
+    </script>
+</body>
+
+</html>

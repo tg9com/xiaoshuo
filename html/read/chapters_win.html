@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+            color: #fff;
+        }
+        .aui-bar-nav {
+            background-color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header"></header>
+    <div class="aui-info" id="info-box">
+        <h3 class="aui-info-item" id="chapter_count" style="padding-left:1rem;"></h3>
+        <h3 class="aui-info-item" id="sort_button" tapmode onclick="sort_button();" style="padding-right:1rem;color:#757575">
+        <svg class="icon" aria-hidden="true" style="color:#757575">
+          <use xlink:href="#icon-daoxu"></use>
+        </svg>
+        <span id="sort_name">倒序</span>
+      </h3>
+    </div>
+
+
+<script type="text/javascript" src="../../script/api.js"></script>
+<script src="../../script/iconfont.js"></script>
+<script type="text/javascript">
+    apiready = function() {
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.html(header,api.pageParam.bookName);
+        $api.fixStatusBar(header);
+        var headerPos = $api.offset(header);
+        var infoPos = $api.offset($api.byId('info-box'));
+        api.openFrame({
+            name: 'chapters_frm',
+            url: 'chapters_frm.html',
+            pageParam: api.pageParam,
+            reload:true,
+            rect: {
+                x: 0,
+                y: headerPos.h + infoPos.h,
+                w: 'auto',
+                h: api.winHeight - headerPos.h - infoPos.h
+            }
+        });
+
+        var soft = $api.getStorage('chapters_list_sort:'+api.pageParam.bookId);
+        if(soft==1){
+          $api.html($api.byId('sort_name'), '顺序');
+        }else{
+          $api.html($api.byId('sort_name'), '倒序');
+        }
+
+    }
+    function setTotalChapters(count){
+      $api.html($api.byId('chapter_count'),'共 '+count+' 章节');
+    }
+    function sort_button() {
+      var soft = $api.getStorage('chapters_list_sort:'+api.pageParam.bookId);
+      if(soft==2){
+        $api.html($api.byId('sort_name'), '顺序');
+      }else{
+        $api.html($api.byId('sort_name'), '倒序');
+      }
+      api.execScript({
+          name: api.winName,
+          frameName: 'chapters_frm',
+          script: 'sort_button();'
+      });
+    }
+</script>
+</body>
+</html>

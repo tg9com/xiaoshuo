@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <style>
+        .aui-list-item-inner .aui-list-item-text {
+            font-size: 0.6rem;
+            color: #33373d
+            padding:0.2rem 0;
+        }
+        .author{color: #333}
+        .bookTotal{color: #aaa;padding-top: 0.2rem;font-size: 0.6rem;}
+        .title {
+            font-size: 0.86rem;
+            color: #111
+        }
+
+
+
+        .book_list_title {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .my_list .aui-list-item-media {
+            width: 3.6rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-media-list" id="book_list">
+
+        </ul>
+    </div>
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript">
+        var start = 0;
+        var loadingId = -1;
+        var UILoading = '';
+
+        function bookList() {
+            // console.log($api.jsonToStr(api.pageParam));
+            UILoading.flower({
+                center: {
+                    x: api.winWidth / 2,
+                    y: api.winHeight - 60
+                },
+                size: 30,
+                fixed: true
+            }, function(ret) {
+                loadingId = ret.id
+            });
+
+            $api.get('http://api.zhuishushenqi.com/book-list/' + api.pageParam.bookId + '/recommend?limit=20&start=0', function(ret) {
+
+                if (ret && ret.ok && ret.booklists) {
+                    var data = ret.booklists;
+                    var html = '';
+                    // console.log($api.jsonToStr(data));
+                    for (v in data) {
+                      html+='<li tapmode onclick="openBookListDetail('+"'"+data[v]['id']+"'"+');" class="aui-list-item">';
+                      html+='	<div class="aui-media-list-item-inner">';
+                      html+='		<div class="aui-list-item-media">';
+                      html+='			<img src="http://statics.zhuishushenqi.com'+data[v]['cover']+'">';
+                      html+='		</div>';
+                      html+='		<div class="aui-list-item-inner">';
+                      html+='			<div class="aui-list-item-text">';
+                      html+='				<div class="aui-list-item-title"><p class="title">'+data[v]['title']+'</p></div>';
+                      html+='			</div>';
+                      html+='			<div class="aui-list-item-text author">';
+                      html+='				<p class="author">'+data[v]['author']+'</p>';
+                      html+='			</div>';
+                      html+='			<div class="aui-list-item-text">';
+                      html+='				<p class="aui-ellipsis-2">'+data[v]['desc']+'</p>';
+                      html+='			</div>';
+                      html+='			<div class="aui-list-item-text">';
+                      html+='				<p class="bookTotal">共' + data[v]['bookCount']+ '本书 | ' + data[v]['collectorCount'] + '人收藏</p>';
+                      html+='			</div>';
+                      html+='		</div>';
+                      html+='	</div>';
+                      html+='</li>';
+
+                    }
+                    $api.append($api.byId('book_list'), html);
+                }
+                UILoading.closeFlower({
+                    id: loadingId
+                });
+                loadingId = -1;
+            }, 'json');
+        }
+        function openBookListDetail(id){
+          console.log(id);
+          api.openWin({
+              name: 'book_list_detail_win',
+              url: './book_list_detail_win.html',
+              pageParam: {'bookListId':id},
+              reload:true
+          });
+        }
+
+        apiready = function() {
+            UILoading = api.require('UILoading');
+            bookList();
+
+            api.addEventListener({
+                name: 'scrolltobottom',
+                extra: {
+                    threshold: 100 //设置距离底部多少距离时触发，默认值为0，数字类型
+                }
+            }, function(ret, err) {
+                console.log(loadingId);
+                if (loadingId == -1) {
+                    loadingId = 0;
+                    bookList();
+                }
+            });
+
+        }
+    </script>
+</body>
+
+</html>

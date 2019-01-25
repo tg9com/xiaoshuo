@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+
+    </style>
+</head>
+
+<body>
+
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript">
+        function atoc(bookId, callback) { //书源
+            $api.get('http://api.zhuishushenqi.com/atoc?view=summary&book=' + bookId, callback, 'json');
+        }
+
+        function chapters(sourceId, callback) { //章节
+            $api.get('http://api.zhuishushenqi.com/atoc/' + sourceId + '?view=chapters&channel=mweb', callback, 'json');
+        }
+
+        function httpChapters() {
+            var bookId = api.pageParam.bookId;
+            atoc(bookId, function(ret) { //书源
+                if (ret) {
+                    var tmp = [];
+                    for (v in ret) {
+                        if (ret[v]['source'] == 'zhuishuvip') {
+                            continue;
+                        } else {
+                            tmp.push(ret[v]);
+                        }
+                    }
+                    ret = tmp;
+                    $api.setStorage('cur_book_atoc', ret);
+                    //读取章节列表
+                    var sourceId = $api.getStorage('s:' + bookId);
+                    if (!sourceId) {
+                        sourceId = ret[0]['_id'];
+                        $api.setStorage('s:' + bookId, sourceId);
+                    }
+                    console.log(sourceId);
+                    chapters(sourceId, function(ret) {
+                        $api.setStorage('cur_book_chapters', ret); //当前书本章节列表
+                        api.sendEvent({
+                            name: 'chaptersChange',
+                            extra: {
+                                from: 'read_win'
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        apiready = function() {
+            api.parseTapmode();
+            var bookId = api.pageParam.bookId;
+            $api.setStorage('cur_book_id', bookId);
+
+            openReadFrm(); //打开 阅读
+
+            api.addEventListener({
+                name: 'selectSource'
+            }, function(ret, err) {
+                // console.log($api.jsonToStr(ret));
+                if (ret && ret.value && ret.value.sourceId) {
+                    var sourceId = ret.value.sourceId;
+                    $api.setStorage('s:' + bookId, sourceId);
+                    chapters(sourceId, function(ret) { //更新章节列表
+                        $api.setStorage('cur_book_chapters', ret); //当前书本章节列表
+                        api.sendEvent({
+                            name: 'chaptersChange'
+                        });
+
+                    });
+                }
+            });
+
+            api.addEventListener({
+                name: 'keyback'
+            }, function(ret, err) {
+                api.setFullScreen({
+                    fullScreen: false
+                });
+                var flag = false;
+                var bookshelf = $api.getStorage('bookshelf');
+                bookshelf = bookshelf || [];
+                for (v in bookshelf) {
+                    if (api.pageParam.bookId == bookshelf[v]['_id']) {
+                      flag = true;
+                      break;
+                    }
+                }
+                if(!flag){
+                  api.confirm({
+                      title: '加入书架',
+                      msg: '喜欢本书就加入书架吧',
+                      buttons: ['不用了', '加入书架']
+                  }, function(ret, err) {
+                      var index = ret.buttonIndex;
+                      if(index==2){
+                        $api.addBook();
+                      }
+                      api.closeWin();
+                  });
+                }else{
+                  api.closeWin();
+                }
+
+            });
+        };
+
+        function openReadFrm() {
+            api.openFrame({
+                name: 'read_frm',
+                url: './read_frm_js.html',
+                bounces: false,
+                pageParam: api.pageParam,
+                rect: {
+                    x: 0,
+                    y: 0,
+                    w: 'auto',
+                    h: 'auto'
+                },
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <style>
+        .aui-list{background:#f5f5f5; }
+        .aui-list .aui-list-item {
+
+            background: #fff;margin: 0.2rem 0;
+        }
+
+        .aui-media-list-item-inner .aui-list-item-media {
+            width: 3.5rem;
+        }
+
+        .aui-info {
+            text-indent: 2em;
+            font-size: 0.75rem;
+            font-weight: 400;
+        }
+
+        .aui-list-item-text {
+            padding: 0.1rem 0
+        }
+
+        .renqi {
+            color: #aaa !important
+        }
+    </style>
+</head>
+
+<body>
+    <div class="aui-content" style="background:#fff;padding:1rem;">
+        <h2 style="padding:0.2rem 0" id="title"></h2>
+        <p id="desc"></p>
+
+    </div>
+    <div class="aui-content aui-margin-b-15" style="padding:0.5rem;">
+
+        <ul class="aui-list aui-media-list" id="book_list">
+
+        </ul>
+
+
+    </div>
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript">
+        var start = 0;
+        var loadingId = -1;
+        var UILoading = '';
+
+        function bookListDetail() {
+            UILoading.flower({
+                center: {
+                    x: api.winWidth / 2,
+                    y: api.winHeight / 2
+                },
+                size: 30,
+                fixed: true
+            }, function(ret) {
+                loadingId = ret.id
+            });
+
+            $api.get('http://api.zhuishushenqi.com/book-list/' + api.pageParam.bookListId, function(ret) {
+                if (ret && ret.ok && ret.bookList) {
+                    var data = ret.bookList;
+                    $api.html($api.byId('title'), data.title);
+                    $api.html($api.byId('desc'), data.desc);
+
+                    var html = '';
+                    // console.log($api.jsonToStr(data));
+                    // $api.append($api.byId('book_list'), html);
+                    var books = data.books;
+                    for (v in books) {
+                        var book = books[v]['book'];
+                        var wordCount = book['wordCount'];
+                        var wordCountD = '';
+                        if (wordCount > 10000) {
+                            wordCount = wordCount / 10000;
+                            wordCount = parseInt(wordCount);
+                            wordCount = wordCount;
+                            wordCountD = '万字';
+                        } else {
+                            wordCount = wordCount;
+                            wordCountD = '字';
+                        }
+
+                        html += '         <li tapmode onclick="$api.openBookDetail(' + "'" + book['_id'] + "'" + ');" class="aui-list-item">';
+                        html += '             <div class="aui-media-list-item-inner">';
+                        html += '                 <div class="aui-list-item-media">';
+                        html += '                     <img src="http://statics.zhuishushenqi.com' + book['cover'] + '">';
+                        html += '                 </div>';
+                        html += '                 <div class="aui-list-item-inner">';
+                        html += '                     <div class="aui-list-item-text">';
+                        html += '                         <div class="aui-list-item-title">' + book['title'] + '</div>';
+                        html += '                     </div>';
+                        html += '                     <div class="aui-list-item-text renqi">';
+                        html += book['author'];
+                        html += '                     </div>';
+                        html += '                     <div class="aui-list-item-text">';
+                        html += '                     <span><font class="aui-text-danger">' + book['latelyFollower'] + '</font> <span class="renqi">人气</span> | <font class="aui-text-danger">' + wordCount + '</font> <span class="renqi">' +
+                            wordCountD + '</span></span> ';
+                        html += '                     </div>';
+                        html += '                 </div>';
+                        html += '             </div>';
+                        html += '             <div class="aui-info">';
+                        html += books[v]['comment'];
+                        html += '             </div>';
+                        html += '         </li>';
+                    }
+                    $api.html($api.byId('book_list'), html);
+                    // console.log(html);
+                    UILoading.closeFlower({
+                        id: loadingId
+                    });
+
+                }
+            }, 'json');
+        }
+        apiready = function() {
+            UILoading = api.require('UILoading');
+            bookListDetail();
+
+        }
+    </script>
+</body>
+
+</html>

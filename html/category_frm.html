@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style>
+      .cat_box .aui-col-xs-4:first-child{}
+      .cat_box .aui-col-xs-4:after {
+          display: block;
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          -webkit-transform-origin: 0 0;
+          -webkit-transform: scale(1);
+          border-right: 1px solid #f0f0f0;
+          border-bottom: 1px solid #f0f0f0;
+      }
+      .aui-grid [class*=aui-col-]{padding: 0.5rem 0;}
+      .aui-col-xs-4 h3{font-size: .9rem;color: #333;line-height: 1.2rem;font-weight:600;}
+      .aui-col-xs-4 p{line-height: 1rem;color: #ccc;font-size: .6rem;}
+      .cat-title{
+        padding: 0 10px;font-size:.8rem;border-bottom: 1px solid #f0f0f0;
+        height: 60px;
+        line-height: 60px;
+        font-weight: 500;
+      }
+    </style>
+</head>
+<body>
+  <section class="aui-grid cat_box" id="cat_box">
+
+
+  </section>
+
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript">
+function openCatePage(cateTitle,gender){
+  api.openWin({
+      name: 'cate_list_win',
+      url: './cate_list_win.html',
+      pageParam: {
+          cateTitle: cateTitle,
+          gender:gender
+      }
+  });
+
+}
+apiready = function(){
+  $api.get('http://api.zhuishushenqi.com/cats/lv2/statistics',function(ret){
+    var titleArr = {'male':'男生','female':'女生','press':'出版'};
+    if(ret && ret.ok){
+      var html = '';
+      for(v in ret){
+        var title =titleArr[v];
+        if(title == undefined){
+          continue;
+        }
+        html +='<h3 class="cat-title">'+title+'</h3><div class="aui-row">';
+        var data = ret[v];
+        for(d in data){
+          html +='<div tapmode onclick="openCatePage('+"'"+data[d]['name']+"','"+v+"'"+')" class="aui-col-xs-4"><h3>'+data[d]['name']+'</h3><p>'+data[d]['bookCount']+'本</p></div>';
+        }
+        html +='</div>';
+      }
+      $api.html($api.byId('cat_box'),html);
+      setTimeout(function(){
+        api.parseTapmode();
+      },1000);
+
+    }
+  },'json');
+}
+</script>
+</body>
+</html>

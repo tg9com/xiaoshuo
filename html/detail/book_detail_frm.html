@@ -1,0 +1,349 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <style>
+        .aui-list .book-avatar {
+            width: 4.8rem;
+        }
+
+        .aui-list .aui-list-item-text {
+            padding: 0.1rem 0;
+            font-size: 1rem;
+        }
+
+        .aui-col-xs-4 {
+            height: 3.4rem;
+            text-align: center;
+            padding-top: 0.4rem;
+        }
+
+        .aui-col-xs-4 p {
+            font-size: 0.7rem;
+            padding-bottom: 0.3rem;
+            color: #999
+        }
+
+        .aui-col-xs-4 h3 {
+            color: #222
+        }
+
+        .my_list .aui-list-item-text  {
+            font-size: 0.6rem;
+            color: #33373d
+        }
+
+        .my_list .aui-list-item-title {
+            font-size: 0.66rem;
+            color: #a58d5e
+        }
+
+        .my_list .aui-list-item-right{
+            color: #999;
+            font-size: 0.66rem
+        }
+
+        .my_list .comm_title {
+            font-weight: 700;
+        }
+
+        .aui-list-item-inner .book_list_title{
+          font-size: 0.8rem;font-weight: 700;
+        }
+        .my_list .aui-list-item-media {
+            width: 3rem;
+        }
+
+        .boox_cat_title {
+            border-left: 2px solid #ed424b;
+            font-weight: 400;
+            line-height: 1.2rem;
+        }
+
+        .boox_cat_title .aui-list-item-title {
+            color: #33373d
+        }
+
+        .boox_cat_title .aui-list-item-right {
+            color: #33373d
+        }
+
+        #recommend .recom_book_img {
+            padding: 0 0.5rem;
+            margin: 0 auto;
+            height: 5rem;
+        }
+
+        .book_content {
+            width: 100%;
+        }
+
+        .icon {
+            width: 0.8em;
+            height: 0.8em;
+            fill: currentColor;
+            overflow: hidden;
+            color: #aaa;
+        }
+        .helpful{font-size: 0.6rem!important;}
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-media-list" id="con_box">
+            <li class="aui-list-item aui-list-item-middle" id="book_info">
+
+            </li>
+            <li class="aui-list-item aui-list-item-middle aui-row">
+                <div class="aui-col-xs-4">
+                    <p>追人气</p>
+                    <h3 id="zhuirenqi"></h3></div>
+                <div class="aui-col-xs-4">
+                    <p>读者留存</p>
+                    <h3 id="duzheliucun"></h3></div>
+                <div class="aui-col-xs-4">
+                    <p>日更新字数</p>
+                    <h3 id="rigengxing"></h3></div>
+            </li>
+            <li class="aui-list-item aui-list-item-middle " style="padding-top:0.4rem;padding-bottom:0.4rem;padding-right:0.75rem">
+                <p style="color:#33373d;text-indent: 2em;" id="longIntro" tapmode onclick="showLongIntro(this)" class="aui-ellipsis-2"></p>
+            </li>
+            <li class="aui-list-item aui-list-item-middle ">
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <div class="aui-list-item-text">
+                        <p class="" style="width:3rem;">目录</p>
+                        <p class="aui-ellipsis-1" style="color:#969ba3" id="mulu"></p>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <ul class="aui-list aui-media-list aui-margin-t-10 my_list" id="book_common">
+
+        </ul>
+
+        <ul class="aui-list aui-media-list aui-margin-t-10" id="">
+            <li tapmode onclick="moreRecommend()" class="aui-list-item aui-list-item-arrow">
+                <div class="aui-media-list-item-inner">
+                    <div class="aui-list-item-inner">
+                        <div class="aui-list-item-text boox_cat_title aui-padded-l-10">
+                            <div class="aui-list-item-title">同类推荐</div>
+                            <div class="aui-list-item-right">更多</div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+        <section class="aui-grid">
+            <div class="aui-row" id="recommend">
+
+            </div>
+        </section>
+
+
+        <!--推荐书单-->
+        <ul class="aui-list aui-media-list aui-margin-t-10 my_list" id="book_list">
+
+        </ul>
+
+    </div>
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript" src="../../script/iconfont.js"></script>
+    <script type="text/javascript">
+        var start = 0;
+        var loadingId = -1;
+        var UILoading = '';
+        var book = '';
+        function moreRecommend(){
+          api.openWin({
+              name: 'recommend_list_win',
+              url: './recommend_list_win.html',
+              pageParam: {'bookId':book['_id'],'title':book['title']},
+              reload:true
+          });
+        }
+        function showLongIntro(obj) {
+            if ($api.hasCls(obj, 'aui-ellipsis-2')) {
+                $api.removeCls(obj, 'aui-ellipsis-2');
+            } else {
+                $api.addCls(obj, 'aui-ellipsis-2');
+
+            }
+        }
+
+        function bookInfo() {
+            UILoading.flower({
+                center: {
+                    x: api.winWidth / 2,
+                    y: api.winHeight / 2
+                },
+                size: 30,
+                fixed: true
+            }, function(ret) {
+                loadingId = ret.id
+            });
+
+            $api.get('http://api.zhuishushenqi.com/book/' + api.pageParam.bookId, function(ret) {
+                if (ret) {
+                    var html = '';
+                    book = ret;
+                    $api.setStorage('read_book_info', book);
+
+                    var longIntro = book['longIntro'].replace(/<\/?.+?>/g, "");
+                    longIntro = longIntro.replace(/ /g, "");
+                    var wordCount = book['wordCount'];
+                    if (wordCount > 10000) {
+                        wordCount = wordCount / 10000;
+                        wordCount = parseInt(wordCount);
+                        wordCount = wordCount + '万字';
+                    } else {
+                        wordCount = wordCount + '字';
+                    }
+                    var serial = book['isSerial'] ? '连载' : '完结';
+                    html += '<div class="aui-media-list-item-inner"><div class="aui-list-item-media book-avatar"><img src="http://statics.zhuishushenqi.com' + book['cover'] +
+                        '" /></div><div class="aui-list-item-inner"><div class="aui-list-item-text"><div class="aui-list-item-title"><h3 class="aui-pull-left" style="color:#333" >' + book['title'] +
+                        '</h3></div></div><div class="aui-list-item-text"><p class=" aui-text-danger aui-ellipsis">' + book['author'] + '</p></div><div class="aui-list-item-text"><p class=" aui-ellipsis">' + book['majorCate'] + '/' + book[
+                            'minorCate'] + '</p></div><div class="aui-list-item-text"><p class=" aui-ellipsis">' + wordCount + ' | ' + serial + '</p></div></div></div>';
+                    $api.html($api.byId('book_info'), html);
+
+                    $api.html($api.byId('zhuirenqi'), book['latelyFollower']);
+                    $api.html($api.byId('duzheliucun'), book['retentionRatio'] + '%');
+                    $api.html($api.byId('rigengxing'), book['serializeWordCount']);
+                    $api.html($api.byId('longIntro'), longIntro);
+
+                    var mulu = book['updated'].substr(0, 10) + ' ' + book['lastChapter'];
+                    $api.html($api.byId('mulu'), mulu);
+
+
+                }
+                // console.log(html);
+                UILoading.closeFlower({
+                    id: loadingId
+                });
+                loadingId = -1;
+            }, 'json');
+        }
+
+        //书评
+        function bookCommon() {
+            $api.css($api.byId('book_common'), 'width:' + api.winWidth + 'px');
+            $api.get('http://api.zhuishushenqi.com/post/review/best-by-book?book=' + api.pageParam.bookId + '&limit=3', function(ret) {
+                if (ret && ret.ok && ret.reviews) {
+                    var data = ret.reviews;
+                    if(data && data.length>0){
+                      var html = '<li  class="aui-list-item aui-list-item-arrow" tapmode onclick="moreBookCommon()"><div  class="aui-media-list-item-inner"><div  class="aui-list-item-inner"><div class="aui-list-item-text boox_cat_title aui-padded-l-10"><div class="aui-list-item-title" style="font-size:0.75rem;font-weight:400;color:#33373d">热门书评</div><div style="color:#33373d" class="aui-list-item-right">更多</div></div></div></div></li>';
+                    }else{
+                      var html = '';
+                    }
+                    // console.log($api.jsonToStr(data));
+                    for (v in data) {
+                        var updatedTime = new Date(data[v]['updated']);
+                        updatedTime = updatedTime.getTime() / 1000;
+                        updatedTime = $api.friendly_time(updatedTime);
+                        html += '<li class="aui-list-item"><div class="aui-media-list-item-inner"><div class="aui-list-item-media"><img class="author_avatar" src="http://statics.zhuishushenqi.com' + data[v]['author']['avatar'] +
+                            '"></div><div class="aui-list-item-inner"><div class="aui-list-item-text"><div class="aui-list-item-title aui-ellipsis">' + data[v]['author']['nickname'] + '</div><div class="aui-list-item-right">' + updatedTime +
+                            '</div></div><div class="aui-list-item-text comm_title">' + data[v]['title'] + '</div><div class="aui-list-item-text book_content"><p class="aui-ellipsis-2" tapmode onclick="showLongIntro(this)">' + data[v][
+                                'content'
+                            ] + '</p></div><div class="aui-list-item-text"><div class="aui-list-item-title helpful"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-youyong"></use></svg> '+data[v]['helpful']['yes']+'</div></div></div></div></li>';
+                    }
+                }
+                // console.log(html);
+                $api.html($api.byId('book_common'), html);
+            }, 'json');
+        }
+
+        function recommendBook() {
+            $api.get('http://api.zhuishushenqi.com/book/' + api.pageParam.bookId + '/recommend', function(ret) {
+                if (ret && ret.ok && ret.books) {
+                    var data = ret.books;
+                    var html = '';
+                    for (v in data) {
+                        if (v > 3) {
+                            continue;
+                        }
+                        html += '<div tapmode onclick="$api.openBookDetail(' + "'" + data[v]['_id'] + "'" + ')" class="aui-col-xs-3"><div class="recom_book_img"><img src="http://statics.zhuishushenqi.com' + data[v]['cover'] +
+                            '" /></div><div class="aui-grid-label">' + data[v]['title'] + '</div></div>';
+                    }
+                }
+
+                $api.html($api.byId('recommend'), html);
+                api.parseTapmode();
+
+            }, 'json');
+        }
+        //书单
+        function bookList() {
+
+            $api.get('http://api.zhuishushenqi.com/book-list/' + api.pageParam.bookId + '/recommend?limit=3', function(ret) {
+              // console.log();
+                if (ret && ret.ok && ret.booklists) {
+                    var data = ret.booklists;
+                    if(data && data.length>0){
+                      var html = '<li  class="aui-list-item aui-list-item-arrow" tapmode onclick="moreBookList()"><div  class="aui-media-list-item-inner"><div  class="aui-list-item-inner"><div class="aui-list-item-text boox_cat_title aui-padded-l-10"><div class="aui-list-item-title" style="font-size:0.75rem;font-weight:400;color:#33373d">推荐书单</div><div style="color:#33373d" class="aui-list-item-right">更多</div></div></div></div></li>';
+                    }else{
+                      var html = '';
+                    }
+                    // console.log($api.jsonToStr(data));
+                    for (v in data) {
+                        html += '<li tapmode onclick="openBookListDetail('+"'"+data[v]['id']+"'"+');" class="aui-list-item"><div class="aui-media-list-item-inner"><div class="aui-list-item-inner"><div class="aui-list-item-text book_list_title">' + data[v]['title'] + '</div><div class="aui-list-item-text book_content"><p class="aui-ellipsis-2" tapmode onclick="showLongIntro(this)">' + data[v][
+                                'desc'
+                            ] + '</p></div></div></div></li>';
+                    }
+                    $api.html($api.byId('book_list'), html);
+                }
+
+            }, 'json');
+        }
+        function addBook() {
+          $api.addBook();
+        }
+
+        function readBook() {
+            $api.openReadWin(book['_id'], book['title']);
+        }
+        //更多 评论
+        function moreBookCommon(){
+          api.openWin({
+              name: 'more_common_win',
+              url: './more_common_win.html',
+              pageParam: {'bookId':book['_id'],'title':book['title']},
+              reload:true
+          });
+        }
+        function openBookListDetail(id){
+          // console.log(id);
+          // alert(id);
+          api.openWin({
+              name: 'book_list_detail_win',
+              url: './book_list_detail_win.html',
+              pageParam: {'bookListId':id},
+              reload:true
+          });
+        }
+        function moreBookList(){
+          api.openWin({
+              name: 'user_book_list_win',
+              url: './user_book_list_win.html',
+              pageParam: {'bookId':book['_id'],'title':book['title']},
+              reload:true
+          });
+        }
+        apiready = function() {
+            UILoading = api.require('UILoading');
+            bookInfo();
+            bookCommon();
+            recommendBook();
+            bookList();
+        }
+    </script>
+</body>
+
+</html>

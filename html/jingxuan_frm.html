@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/common.css" />
+    <style>
+        .boox_cat_title {
+            border-left: 2px solid #ed424b;
+            font-weight: 400;
+            line-height: 1.2rem;
+        }
+
+        .boox_cat_title .aui-list-item-title {
+            color: #33373d
+        }
+
+        .boox_cat_title .aui-list-item-right {
+            color: #33373d
+        }
+
+
+        .aui-list .aui-list-item-text {}
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15" id="con_box">
+
+    </div>
+
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    function bookList(callback) {
+        $api.get('http://api.zhuishushenqi.com/recommendPage/nodes/5910018c8094b1e228e5868f', function(ret) {
+            if (ret.ok && ret.data) {
+                var html = '';
+                var data = ret.data;
+                var sex = $api.getStorage('user_sex');
+                var sexArr = {
+                    1: 'male',
+                    2: 'female'
+                };
+                var sex = sexArr[sex];
+                for (v in data) {
+                    if (data[v]['sex'] == sex) {
+                        html += '<ul id="li_' + data[v]['_id'] +
+                            '" class="aui-list aui-media-list"><li class="aui-list-item aui-list-item-arrow"><div class="aui-media-list-item-inner"><div class="aui-list-item-inner"><div class="aui-list-item-text boox_cat_title aui-padded-l-10"><div class="aui-list-item-title">' +
+                            data[v]['title'] + '</div><div tapmode onclick="more('+"'"+data[v]['_id']+"','"+data[v]['title']+"'"+')" class="aui-list-item-right">更多</div></div></div></li></ul>';
+                    }
+                }
+                $api.html($api.byId('con_box'), html);
+                for (v in data) {
+                    if (data[v]['sex'] != sex) {
+                        continue;
+                    }
+                    $api.get('http://api.zhuishushenqi.com/recommendPage/books/' + data[v]['_id'], function(ret) {
+                        if (ret && ret.ok && ret.data) {
+                            var data = ret.data;
+                            var node = data[0]['node'];
+                            var html = '';
+                            for (v in data) {
+                                var book = data[v]['book'];
+                                var serial = book['isSerial'] ? '连载中' : '完结';
+                                var shortIntro=book['shortIntro'].replace(/<\/?.+?>/g,"");
+                                var shortIntro=shortIntro.replace(/ /g,"");
+
+                                html += '<li tapmode onclick="$api.openBookDetail('+"'"+book['_id']+"'"+')"  class="aui-list-item aui-list-item-middle"><div class="aui-media-list-item-inner"><div class="aui-list-item-media book-avatar"><img src="' + book['cover'] +
+                                    '" /></div><div class="aui-list-item-inner"><div class="aui-list-item-text"><div class="aui-list-item-title"><h3 class="aui-pull-left" style="font-weight:bold">' + book['title'] +
+                                    '</h3></div></div><div class="aui-list-item-text short_intro"><p class="aui-font-size-12 aui-ellipsis-2">' + shortIntro +
+                                    '</p></div><div class="aui-list-item-text"><p class="aui-font-size-12 aui-ellipsis-1">' + book['author'] +
+                                    ' 著</p><div class=""><div class="aui-label aui-label aui-label-outlined">' + book['majorCate'] + '</div><div class="aui-label aui-label-danger aui-label-outlined">' + serial +
+                                    '</div><div class="aui-label aui-label-info aui-label-outlined">' + book['latelyFollower'] + '人气</div></div></div></div></div></li>';
+                            }
+                            $api.append($api.byId('li_' + node), html);
+                            api.parseTapmode();
+
+                        }
+                    }, 'json');
+                }
+            }
+            callback && callback();
+        }, 'json');
+    }
+    function more(id,cateTitle){
+      api.openWin({
+          name: 'jingxuan_list_win',
+          url: './jingxuan_list_win.html',
+          pageParam: {
+              catId: id,
+              cateTitle:cateTitle
+          }
+      });
+
+    }
+    apiready = function() {
+        bookList();
+        api.addEventListener({
+            name: 'user_sex_change'
+        }, function(ret, err){
+          bookList();
+        });
+
+
+        $api.refreshHeader(function() { //下拉刷新
+          bookList(function(){
+            api.refreshHeaderLoadDone();
+          });
+        });
+
+
+    }
+</script>
+</body>
+</html>

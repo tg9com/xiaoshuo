@@ -1,0 +1,439 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/iSlider.css" />
+    <style type="text/css">
+
+        .night .book_pic p{
+          color: hsla(0,0%,100%,.5);
+        }
+        .book_pic p {
+            display: inline-block;
+            padding: .4rem 0.3rem;
+            position: relative;
+            text-align: left;
+            text-indent: 2em;
+            width: 100%;
+            color: #33373d;
+        }
+        .book_p2ic {
+            font-size: 18px;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+            justify-content:flex-start;
+
+        }
+        #center_click {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 99;
+        }
+        #bg_click{
+          position: fixed;
+          background-color: rgba(0, 0, 0, 0);
+          z-index: 98; width: 100%;height: 100%;
+        }
+        .chapters_title {
+            background: #f5f5f5;
+            padding-left: 1rem;
+            height: 1rem;
+        }
+
+        #book_con {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: absolute;
+            background: #c4b395;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="center_click"></div>
+    <div class="chapters_title">
+        <p id="chapters_name"></p>
+    </div>
+
+    <div id="book_con" class="day"></div>
+
+    <div id="big_con" class="aui-invisible">
+
+    </div>
+
+
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/iSlider.js"></script>
+<script type="text/javascript">
+
+    var divI = 1;
+    var loadingId = -1;
+    var UILoading = null;
+    var chapterIndex = 0;
+    var chapters = null;
+    var swiper = '';
+    var adHeight = 0;
+    var readChapter = '';// 判断是否有阅读进度
+    function slideChanged(idx){
+      var div = $api.byId('con' + (idx + 1));
+      var title = $api.attr(div, 'data-title');
+      var chapterIndex = $api.attr(div, 'data-chapter-index');
+      var key = api.pageParam.bookId + '_chapter_id';
+      if(chapterIndex){
+        $api.setStorage(key,chapterIndex);
+      }
+      $api.html($api.byId('chapters_name'), title);
+      if(chapters){
+        var readChapter = chapters[chapterIndex];
+        if(readChapter){
+          readChapter['chapterIndex'] = chapterIndex;
+          var swipterindex = $api.attr(div, 'data-swipterindex');
+          readChapter['swipterIndex'] = swipterindex;
+          // console.log($api.jsonToStr(readChapter));
+          $api.setStorage(api.pageParam.bookId+'_read_chapter',readChapter);
+        }
+      }
+      if((this.data.length-idx)<5){
+        setTimeout(function() {
+            chapterNext();
+        }, 100);
+      }
+    }
+    function newSwiper(data){
+      var index = 0;
+      if(readChapter && readChapter['swipterIndex']!=undefined){
+        index = readChapter['swipterIndex'];
+      }
+      console.log(index);
+      swiper = new iSlider(document.getElementById('book_con'),data,{
+        animateTime:200,
+        initIndex:parseInt(index),
+        fillSeam:false
+      });
+      swiper.on('slideChanged',slideChanged);
+      console.log(swiper.data.length);
+      if(index==(swiper.data.length-1)){
+        chapterNext();
+      }
+    }
+    function chapterCon(url, callback) { //章节内容
+        url = encodeURIComponent(url);
+        $api.get('http://chapter2.zhuishushenqi.com/chapter/' + url, callback, 'json');
+    }
+
+    function swiperChapter(chapter,chapterIndex) { //计算文字 分页
+        if(!chapter){
+          return false;
+        }
+        var url = chapter['link'];
+        var titleBox =$api.offset($api.dom('.chapters_title'));
+        var winHeight = api.winHeight - titleBox.h-adHeight;
+        var title = $api.html($api.byId('chapters_name'));
+        if(!title){
+          $api.html($api.byId('chapters_name'), chapter['title']);
+        }
+        var fontSize = $api.getStorage('read_font_size');
+        if(!fontSize){
+          fontSize = 18;
+        }
+
+        chapterCon(url, function(ret) {
+            var str = ret.chapter.body;
+            var swiperIndex = 0;
+            var data = [];
+            $api.html($api.byId('big_con'),'<div class="book_pic" data-swipterindex="0" data-chapter-index="'+chapterIndex+'" data-title="' + chapter.title + '" id="con' + divI + '"></div>');
+            var arr = str.split('\n');
+            for (v in arr) {
+                var con = $api.byId('con' + divI);
+                var html = $api.html(con);
+                var p = "<p style='font-size:"+fontSize+"px;'>" + arr[v] + "</p>";
+                $api.append(con, p);
+                var offset = $api.offset(con);
+                if (offset.h > winHeight) {
+                    //精细
+                    var letterArr = arr[v].split('');  //这是一段文字
+                    var letterGroupArr=[];
+                    for(var i=0;i<letterArr.length;i=i+5){
+                      letterGroupArr.push(letterArr.slice(i,i+5));
+                    }
+                    var letterP = letterT = letterF = '';
+                    while(true){
+                      var subLetter = temp = letterGroupArr.shift();
+                      if(temp == undefined){
+                        break;
+                      }
+                      temp = temp.join('');
+                      temp = letterT + temp;
+                      var lp = "<p style='font-size:"+fontSize+"px;'>" + temp + "</p>";
+                      $api.html(con, html);
+                      $api.append(con, lp);
+                      var offset = $api.offset(con);
+                      if (offset.h > winHeight) {
+                        while (true) {
+                          var ss = temp = subLetter.shift();
+                          if(temp == undefined){
+                            break;
+                          }
+                          temp = letterT + temp;
+                          var lp = "<p style='font-size:"+fontSize+"px;'>" + temp + "</p>";
+                          $api.html(con, html);
+                          $api.append(con, lp);
+                          var offset = $api.offset(con);
+                          if (offset.h > winHeight) {
+                            var lp = "<p style='font-size:"+fontSize+"px;'>" + letterT + "</p>";
+                            $api.html(con, html);
+                            $api.append(con, lp);
+                            letterF += ss + subLetter.join('');
+                            break;
+                          }else{
+                            letterT = temp;
+                          }
+                        }
+                        for(lg in letterGroupArr){
+                          letterF += letterGroupArr[lg].join('');
+                        }
+                        break;
+                      }else{
+                        letterT = temp;
+                      }
+                    }
+                    if(!letterT){
+                      $api.html(con, html);
+                    }
+                    $api.css(con, "overflow:hidden; width:" + api.winWidth + "px; height:" + winHeight + 'px');
+                    data.push({'content':$api.html($api.byId('big_con'))});
+                    divI++;
+                    swiperIndex++;
+                    $api.html($api.byId('big_con'),'<div class="book_pic" data-swipterindex="'+swiperIndex+'" data-chapter-index="'+chapterIndex+'" data-title="' + chapter.title + '"  id="con' + divI + '"></div>');
+                    con = $api.byId('con' + divI);
+                    $api.append(con, "<p style='font-size:"+fontSize+"px;'>" + letterF + "</p>");
+                }
+            }
+            data.push({'content':$api.html($api.byId('big_con'))});
+
+            $api.html($api.byId('big_con'),'');
+            if(!swiper){
+              newSwiper(data);
+            }else{
+              swiper.pushData(data);
+            }
+            divI++;
+        });
+    }
+    //下一章
+    function chapterNext() {
+      // console.log(chapterIndex);
+      if(chapters){
+        chapterIndex = parseInt(chapterIndex) + 1;
+        showChapter();
+      }
+    }
+
+    // 显示 当前章节
+    function showChapter() {
+        if(chapters){
+          var chapter = chapters[chapterIndex];
+          swiperChapter(chapter,chapterIndex);
+        }
+    }
+    //选择了章节 ID
+    function select_chapter_index(index){
+      if(swiper){
+        swiper.destroy();
+      }
+      swiper = ''
+      divI = 1;
+      chapterIndex = index;
+      console.log(chapterIndex);
+      $api.html($api.byId('chapters_name'), '');
+      showChapter();
+    }
+
+    function day_or_night(){
+      var type = $api.getStorage('day_or_night');
+      if(type==1){//日间
+        $api.addCls($api.dom('#book_con'),'night');
+        $api.css($api.dom('#book_con'),'background:#1a1a1a');
+        $api.css($api.dom('.chapters_title'),'background:#1e1e1e');
+      }else{
+        $api.css($api.dom('#book_con'),'background:#c4b395');
+        $api.css($api.dom('.chapters_title'),'background:#c4b395');
+        $api.removeCls($api.byId('book_con'),'night');
+      }
+    }
+    function sliderUnlock(){
+      // console.log('erer');
+      if(swiper){
+        swiper.unhold();
+      }
+    }
+    function center_click(){
+      var h = api.winHeight;
+      var w = api.winWidth;
+      var hh = h/3;
+      var ww = w/3;
+      $api.css($api.byId('center_click'), 'top:'+((api.winHeight-hh)/2)+"px;left:"+((api.winWidth-ww)/2)+"px;width:"+ww+"px;height:"+hh+"px");
+      $api.byId('center_click').addEventListener("touchstart",function(e){
+        if(swiper){
+          swiper.lock();
+        }
+          api.openFrame({
+              name: 'read_tool',
+              url: 'widget://html/read/tool.html',
+              pageParam:api.pageParam,
+              rect: {
+                  x: 0,
+                  y: 0,
+                  w: 'auto',
+                  h: 'auto'
+              },
+              bgColor: 'rgba(0,0,0,0)',
+          });
+      });
+    }
+
+    function tap(ele, fn){
+        var startTx, startTy;
+        var endTx, endTy;
+        ele.addEventListener( 'touchstart', function( e ){
+        var touches = e.touches[0];
+        startTx = touches.clientX;
+        startTy = touches.clientY;
+    }, false );
+
+    ele.addEventListener( 'touchend', function( e ){
+        var touches = e.changedTouches[0];
+        endTx = touches.clientX;
+        endTy = touches.clientY;
+        if( Math.abs(startTx - endTx) < 6 && Math.abs(startTy - endTy) < 6 ){
+            fn(e);
+        }
+    }, false );
+    }
+
+    tap($api.byId('book_con'),function(e){
+      if(swiper){
+        swiper.slideNext();
+      }
+    })
+    apiready = function() {
+        api.parseTapmode();
+        api.setFullScreen({
+            fullScreen: true
+        });
+        UILoading = api.require('UILoading');
+        UILoading.flower({
+            center: {
+                x: api.winWidth/2,
+                y: api.winHeight/2
+            },
+            size: 40,
+            fixed: true
+        }, function(ret) {
+          loadingId = ret.id;
+        });
+        // var tencentAds = api.require('tencentAds');
+        // tencentAds.showBanner({
+        //        x: 0,
+        //        y: api.winHeight-adHeight,
+        //        h: adHeight,
+        //        refresh: 30,
+        //        fixed: true
+        // },function(ret,err){
+        //
+        // });
+        $api.css($api.byId('book_con'),'height:'+(api.winHeight-adHeight)+'px');
+        chapterIndex = $api.getStorage(api.pageParam.bookId + '_chapter_id');
+        if (!chapterIndex || isNaN(chapterIndex)) {
+            chapterIndex = 0;
+            $api.setStorage(api.pageParam.bookId + '_chapter_id', chapterIndex);
+        }
+        readChapter = $api.getStorage(api.pageParam.bookId+'_read_chapter');
+        if(readChapter){
+          swiperChapter(readChapter,readChapter['chapterIndex']);
+        }
+        center_click();
+
+
+        api.addEventListener({ //章节列表修改了需要重新读取内容
+            name: 'chaptersChange'
+        }, function(ret, err) {
+            if (ret) {
+              chapters = $api.getStorage('cur_book_chapters');
+              chapters = chapters['chapters'];
+              // console.log($api.jsonToStr(ret));
+              if(ret.value && ret.value.from =='read_win'){
+                if(!readChapter){
+                  showChapter();
+                }else{
+                  chapterNext();
+                }
+                if(loadingId!=-1){
+                  UILoading.closeFlower ({
+                      id: loadingId
+                  });
+                }
+              }else{
+                if(swiper){
+                  swiper.destroy();
+                }
+                swiper = ''
+                divI = 1;
+                // chapters = '';
+                chapterIndex = $api.getStorage(api.pageParam.bookId + '_chapter_id');
+                // console.log(chapterIndex);
+                showChapter();
+              }
+            }
+        });
+
+        api.addEventListener({
+            name: 'day_or_night'
+        }, function(ret, err){
+            if( ret ){
+              day_or_night();
+            }
+        });
+        day_or_night();
+
+        api.addEventListener({
+            name: 'read_font_size'
+        }, function(ret, err){
+          if(swiper){
+            swiper.destroy();
+          }
+          swiper = ''
+          divI = 1;
+          // chapters = '';
+          chapterIndex = $api.getStorage(api.pageParam.bookId + '_chapter_id');
+          console.log(chapterIndex);
+          showChapter();
+        });
+
+        api.execScript({
+            name: 'read_win',
+            script: 'httpChapters();'
+        });
+
+        // api.addEventListener({
+        //     name: 'tap'
+        // }, function(ret, err){
+        //   console.log('tap');
+        //     // if(swiper){
+        //     //   swiper.slideNext();
+        //     // }
+        // });
+    };
+
+</script>
+
+</body>
+</html>

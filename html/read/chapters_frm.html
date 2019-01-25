@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+        #list_box::-webkit-scrollbar {
+            width: 10px;
+            height: 0px;
+        }
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* 滚动条的滑轨背景颜色 */
+
+        #list_box::-webkit-scrollbar-track {
+            background-color: #fff;
+            border-radius: 5px;
+            width: 10px;
+        }
+        /* 滑块颜色 */
+
+        #list_box::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+            background-color: #555;
+        }
+        /*内层轨道的颜色*/
+
+        #list_box::-webkit-scrollbar-track-piece {
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        /* 滑轨两头的监听按钮颜色 */
+
+        #list_box::-webkit-scrollbar-button {
+            background-color: #000;
+            width: 0;
+            height: 0;
+        }
+        /* 横向滚动条和纵向滚动条相交处尖角的颜色 */
+
+        #list_box::-webkit-scrollbar-corner {
+            background-color: black;
+        }
+
+        .aui-content,
+        #list_box {
+            overflow: scroll;
+        }
+        .aui-bar-nav {
+            background-color: #000;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-list-in" id="list_box">
+
+        </ul>
+    </div>
+
+
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function() {
+        api.parseTapmode();
+        // setTimeout(function(){
+        //   showList();
+        // },300);
+        api.addEventListener({ //章节列表修改了需要重新读取内容
+            name: 'chaptersChange'
+        }, function(ret, err) {
+            if (ret) {
+                showList();
+            }
+        });
+    }
+
+    function sort_button(){
+      var soft = $api.getStorage('chapters_list_sort:'+api.pageParam.bookId);
+      if(soft == 1){
+        soft = 2;
+      }else{
+        soft = 1;
+      }
+      $api.setStorage('chapters_list_sort:'+api.pageParam.bookId,soft);
+      showList();
+    }
+
+    function select_chapter(index){
+      console.log(index);
+      $api.setStorage(api.pageParam.bookId + '_chapter_id',index);
+
+      api.execScript({
+          name: 'read_win',
+          frameName: 'read_frm',
+          script: 'select_chapter_index('+index+');'
+      });
+
+      api.closeDrawerPane();
+
+    }
+    function showList(){
+      var list = $api.getStorage('cur_book_chapters');
+      if(!list){
+        return ;
+      }
+      list = list['chapters'];
+      console.log($api.jsonToStr(api.pageParam));
+      var soft = $api.getStorage('chapters_list_sort:'+api.pageParam.bookId);
+      if(soft==2){
+        list.reverse();
+      }
+      api.execScript({
+          name: 'chapters_win',
+          script: 'setTotalChapters('+list.length+');'
+      });
+      var html = '';
+      $api.html($api.byId('list_box'), html);
+      for (v in list) {
+          var index  = v;
+          if(soft==2){
+            index = list.length-1-v;
+          }
+          html = '<li  tapmode onclick="select_chapter('+index+');" class="aui-list-item"><div class="aui-list-item-inner"><div  class="aui-list-item-title">' + list[v]['title'] + '</div></li>';
+          $api.append($api.byId('list_box'), html);
+      }
+      // $api.html($api.byId('list_box'), html);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <style>
+        .aui-list .book-avatar {
+            width: 4.8rem;
+        }
+        .aui-list .aui-list-item-text {
+            padding: 0.1rem 0;
+            font-size: 1rem;
+        }
+        #book_common .aui-list-item-text {
+            font-size: 0.6rem;
+            color: #33373d
+        }
+
+        #book_common .aui-list-item-title {
+            font-size: 0.66rem;
+            color: #a58d5e
+        }
+
+        #book_common .aui-list-item-right {
+            color: #999;
+            font-size: 0.66rem
+        }
+
+        #book_common .comm_title {
+            font-weight: 700;
+        }
+
+        #book_common .aui-list-item-media {
+            width: 3rem;
+        }
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="aui-content aui-margin-b-15">
+        <ul class="aui-list aui-media-list" id="book_common">
+
+        </ul>
+    </div>
+
+    <script type="text/javascript" src="../../script/api.js"></script>
+    <script type="text/javascript" src="../../script/iconfont.js"></script>
+    <script type="text/javascript">
+        var start = 0;
+        var loadingId = -1;
+        var UILoading = '';
+        var limit = 20;
+        function showLongIntro(obj) {
+            if ($api.hasCls(obj, 'aui-ellipsis-2')) {
+                $api.removeCls(obj, 'aui-ellipsis-2');
+            } else {
+                $api.addCls(obj, 'aui-ellipsis-2');
+            }
+        }
+        //书评
+        function bookCommon() {
+          UILoading.flower({
+              center: {
+                  x: api.winWidth/2,
+                  y: api.winHeight-60
+              },
+              size: 30,
+              fixed: true
+          }, function(ret) {
+            loadingId = ret.id
+          });
+
+            $api.css($api.byId('book_common'), 'width:' + api.winWidth + 'px');
+            $api.get('http://api.zhuishushenqi.com/post/review/by-book?book=' + api.pageParam.bookId + '&sort=updated&limit='+limit+'&start='+start, function(ret) {
+                if (ret && ret.ok && ret.reviews) {
+                    var data = ret.reviews;
+                    if(start===0){
+                      var html = '<li class="aui-list-header" style="background:#fff;font-size:0.8rem;font-weight:400;color:#33373d">热门书评</li>';
+                    }else{
+                      var html = '';
+                    }
+                    for (v in data) {
+                        var updatedTime = new Date(data[v]['updated']);
+                        updatedTime = updatedTime.getTime() / 1000;
+                        updatedTime = $api.friendly_time(updatedTime);
+
+                        html += '<li class="aui-list-item"><div class="aui-media-list-item-inner"><div class="aui-list-item-media"><img class="author_avatar" src="http://statics.zhuishushenqi.com' + data[v]['author']['avatar'] +
+                            '"></div><div class="aui-list-item-inner"><div class="aui-list-item-text"><div class="aui-list-item-title aui-ellipsis">' + data[v]['author']['nickname'] + '</div><div class="aui-list-item-right">' + updatedTime +
+                            '</div></div><div class="aui-list-item-text comm_title">' + data[v]['title'] + '</div><div class="aui-list-item-text book_content"><p class="aui-ellipsis-2" tapmode onclick="showLongIntro(this)">' + data[v][
+                                'content'
+                            ] + '</p></div><div class="aui-list-item-text"><div class="aui-list-item-title"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-youyong"></use></svg>'+data[v]['helpful']['yes']+'</div></div></div></div></li>';
+                    }
+                    start += limit;
+                }
+                // console.log(html);
+                $api.append($api.byId('book_common'), html);
+
+                UILoading.closeFlower ({
+                    id: loadingId
+                });
+                loadingId = -1;
+
+            }, 'json');
+        }
+
+        apiready = function() {
+            UILoading = api.require('UILoading');
+            bookCommon();
+
+            api.addEventListener({
+                name:'scrolltobottom',
+                extra:{
+                    threshold:100            //设置距离底部多少距离时触发，默认值为0，数字类型
+                }
+            }, function(ret, err){
+              console.log(loadingId);
+              if(loadingId==-1){
+                loadingId = 0;
+                bookCommon();
+              }
+            });
+        }
+    </script>
+</body>
+
+</html>
